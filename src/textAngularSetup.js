@@ -11,7 +11,7 @@ textAngularSetup = angular.module('textAngularSetup', []);
 // Here we set up the global display defaults, to set your own use a angular $provider#decorator.
 textAngularSetup.value('taOptions',  {
 	toolbar: [
-		['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'pre', 'quote'],
+		['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'highlight', 'p', 'pre', 'quote'],
 		['bold', 'italics', 'underline', 'ul', 'ol', 'redo', 'undo', 'clear'],
 		['justifyLeft','justifyCenter','justifyRight','indent','outdent'],
 		['html', 'insertImage', 'insertLink', 'insertVideo']
@@ -109,6 +109,21 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 			activeState: _retActiveStateFunction(h.toLowerCase())
 		});
 	});
+	taRegisterTool('highlight', {
+		isHighlighted: false,
+		iconclass: 'fa fa-pencil',
+		action: function() {
+			//var color = this.isHighlighted ? 'transparent' : this.highlightColor;
+			//this.isHighlighted = !this.isHighlighted;
+			return this.$editor().wrapSelection("customTag", "<mark>");
+            //this.$editor().wrapSelection('formatBlock', '<mark>');
+		},
+		activeState: function(){ 
+            return 'activeState';    
+          //this.$editor().queryFormatBlockState('<mark>'); 
+        
+        }
+    });
 	taRegisterTool('p', {
 		buttontext: 'P',
 		action: function(){

@@ -144,6 +144,11 @@ describe('taTools test tool actions', function(){
 			expect(button.hasClass('active'));
 		});
 		
+		it('highlight button should function correctly', function(){
+			button = findAndTriggerButton('highlight');
+			expect(button.hasClass('active'));
+		});
+
 		it('bold button should function correctly', function(){
 			button = findAndTriggerButton('bold');
 			expect(button.hasClass('active'));
