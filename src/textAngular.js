@@ -760,15 +760,219 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 			listElement.remove();
 			taSelection.setSelectionToElementEnd($target.find('li')[0]);
 		};
-        // Wraps the selection with a epecified string taggified: tag = mytag > <myTag>selection</myTag>
-        var wrapSelectionWithTag = function (customTag) {
-            var tag = customTag.toLowerCase().replace(/[<>]/ig, ''),
-                sel = taSelection.getSelection(),
-                range = sel.getRangeAt(0),
-                tagNode = $document[0].createElement(tag);
 
-            range.surroundContents(tagNode);
+
+
+
+
+
+
+
+
+
+        var wrapInside = function (container, start, end, tagName) {
+            console.log("INSIDE -------------------------- ", container.textContent, start, end, "|" + container.textContent.slice(start, end) + "|");
+            var subRange, wrapperNode, result, 
+                containerTag = (container.tagName) ? container.tagName : container.parentElement.tagName;
+            
+            if( (start < end) && // void container
+                (tagName.toLowerCase() !== containerTag.toLowerCase()) ) {
+                wrapperNode = $document[0].createElement(tagName);
+                subRange = $document[0].createRange();
+                
+                subRange.setStart(container, start);
+                subRange.setEnd(container, end);
+                //subRange.setEnd(container, (end === container.textContent.length) ? end : end );
+                
+                subRange.surroundContents(wrapperNode);
+                subRange.detach();
+
+                result = container.parentElement; // return the surrounding element, the added one
+            } else {
+                result = container;
+            } 
+            
+            return result;
+
         };
+
+
+        var wrapUp = function (range, actCont, tagName, direction) {
+            console.log("UP - ", actCont, (actCont) ? actCont.textContent : 'null', (direction) ? '->': '<-');
+            
+            var start , end, sibling, atTop = (actCont) ? range.commonAncestorContainer.isSameNode(actCont.parentElement) : false;
+                
+            if (direction){
+                start = (!actCont) ? range.startOffset : 0 ;
+                actCont = (!actCont) ? range.startContainer : actCont ; 
+                end = (atTop) ? range.endOffset : actCont.textContent.length;
+            } else {
+                end = (!actCont) ? range.endOffset : actCont.textContent.length;
+                actCont = (!actCont) ? range.endContainer : actCont ; 
+                start = (atTop) ? range.startOffset : 0 ;
+            }
+            
+            actCont = wrapInside(actCont, start, end, tagName);
+            sibling = actCont[(direction) ? 'nextSibling' : 'previousSibling'];
+            actCont = (sibling) ? sibling : actCont.parentElement;
+            
+            if (!atTop) {
+                wrapUp(range, actCont, tagName, direction);
+            }
+
+        };
+
+		// Wraps the selection with a epecified string taggified: tag = mytag > <myTag>selection</myTag>
+		var wrapSelectionWithTag = function (customTag) {
+
+			var sel = taSelection.getSelection(),
+				range = sel.getRangeAt(0),
+				tag, 
+				getContainer = function (node) {
+                    return (node.nodeType === 3) ? node.parentNode : node; 
+                },
+
+                resetRange = function (range, currentNode, previousNode) {
+                    var nextNode,
+                        commonNode = range.commonAncestorContainer;
+
+                    if(currentNode.isSameNode(commonNode) || (currentNode.nextSibling)) {
+                        // check next text node or add one "" if it does not exists and place the end offset at 0 position
+                        nextNode = previousNode.nextSibling ;
+
+                        if(nextNode){ 
+                            if(nextNode.nodeType === 3){ // the next sibling is a text node so it can contain the end of the range
+                                range.setEnd(nextNode, 0);
+                            } else {
+                                // create a text node there and place end at pos 0 
+                                previousNode.insertAdjacentHTML('afterEnd','.');
+                                range.setEnd(nextNode, 0);
+                                previousNode.parentNode.removeChild(previousNode.nextSibling);
+                            }
+                        } else {
+                            // create a text node there and place end at pos 0 
+                            nextNode.parentNode.insertAdjacentHTML('beforeEnd','.');
+                            range.setEnd(commonNode.lastChild, 0);
+                            nextNode.parentNode.removeChild(nextNode.parentNode.lastChild);
+                        }
+                    } else {
+                        // recursive case 
+                        resetRange(range, currentNode.parentNode, currentNode);
+                    }
+
+                }
+                ; 
+
+			if(!range.collapsed){
+
+				tag = customTag.toLowerCase().replace(/[<>]/ig, '');
+				start = getContainer(range.startContainer);
+				end = getContainer(range.endContainer);
+				common = getContainer(range.commonAncestorContainer);
+
+                // reset start and endpoint of the selection
+                
+                if(range.endContainer.textContent.length === range.endOffset){
+                    resetRange(range, range.endContainer, null);
+                }
+
+				if( !common.isSameNode(start) ){
+                    wrapUp(range, null, tag, true);                        
+				}
+
+				if( !common.isSameNode(end) ){
+                    wrapUp(range, null, tag, false); 
+				}
+				
+				range.surroundContents($document[0].createElement(tag));
+
+                range.detach();
+
+			} 
+
+		};
+
+
+
+/*
+ 
+<p>
+	ajhds;kfja;kldsfjads
+	<bold>
+		catacroquer 
+		<mark>
+			mark test
+		</mark>
+		hjrdfgkjdf
+	</bold>
+	jgkjg
+</p>
+
+<p>
+	ajhds;kfja;kldsfjads
+	<bold>
+		catacroquer 
+		<mark>
+			mark
+			</mark>
+	</bold>
+	<mark>
+	<bold>
+		 
+			test
+		</mark>
+		hjrdfgkjdf
+	</bold>
+	jgkjg
+</p>
+
+seleccionar neque eu enim. Donec orci lectus ali
+
+llamadas
+
+markUp(range, cont, offset, tagName, direction)
+markUp(range, "aliquam",    4, tagName, <- )     wI( end: "aliquam", 4, wrapperNode, <- )
+markUp(range, "lectus",     0, tagName, <- )     wI( "lectus", 0 , wrapperNode, -> )
+markUp(range, "",     0, tagName, <- )     wI( "lectus", 0 , wrapperNode, -> )
+
+<p>
+    Aenean commodo ligula eget dolor. Praesent turpis. Praesent egestas neque eu enim. 
+    <b>
+        Donec orci 
+    </b>
+    <i>
+        <b>
+            lectus, 
+            <mark>
+                aliquam
+            </mark>
+        </b> 
+        ut
+    </i>
+    , faucibus non, euismod id, nulla. Duis leo.
+</p>
+ 
+ 
+ 
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		return function(taDefaultWrap){
 			taDefaultWrap = taBrowserTag(taDefaultWrap);
 			return function(command, showUI, options){

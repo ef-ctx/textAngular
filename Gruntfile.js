@@ -12,8 +12,8 @@ module.exports = function(grunt) {
 
     // Default task.
     grunt.registerTask('default', ['concat', 'uglify', 'clean', 'test']);
-    grunt.registerTask('test', ['jshint', 'karma', 'coverage']);
-    grunt.registerTask('travis-test', ['jshint', 'karma', 'coverage', 'coveralls']);
+    grunt.registerTask('test', ['jshint', 'karma:jquery', 'karma:jqlite', 'coverage']);
+    grunt.registerTask('travis-test', ['jshint', 'karma:jquery', 'karma:jqlite', 'coverage', 'coveralls']);
 
     var testConfig = function(configFile, customOptions) {
         var options = {
@@ -62,6 +62,22 @@ module.exports = function(grunt) {
                     'src/textAngularSetup.js'
                 ],
                 tasks: ['default']
+            },
+
+            spec: {
+                files: [
+                    'test/taBind.spec.js',
+                    'test/taExecCommand.spec.js',
+                    'test/taFixChrome.spec.js',
+                    'test/taMaxText.spec.js',
+                    'test/taRegisterTool.spec.js',
+                    'test/taSanitize.spec.js',
+                    'test/taTools.spec.js',
+                    'test/textAngular.spec.js',
+                    'test/textAngularManager.spec.js',
+                    'test/textAngularToolbar.spec.js'
+                ],
+                tasks: ['karma:testDev']
             }
         },
         karma: {
@@ -70,6 +86,16 @@ module.exports = function(grunt) {
             },
             jqlite: {
                 options: testConfig('karma-jqlite.conf.js')
+            },
+            testDev: {
+                options: {
+                    plugins: ['karma-jasmine', 'karma-coverage', 'karma-firefox-launcher', 'karma-chrome-launcher', 'karma-phantomjs-launcher'],
+                    configFile: 'karma-jquery.conf.js',
+                    keepalive: true,
+                    browsers: ['Chrome'],
+                    reporters: ['dots'],
+                    singleRun: false
+                }
             }
         },
         jshint: {
