@@ -113,15 +113,26 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 		isHighlighted: false,
 		iconclass: 'fa fa-pencil',
 		action: function() {
-			//var color = this.isHighlighted ? 'transparent' : this.highlightColor;
-			//this.isHighlighted = !this.isHighlighted;
 			return this.$editor().wrapSelection("customTag", "<mark>");
-            //this.$editor().wrapSelection('formatBlock', '<mark>');
 		},
-		activeState: function(){ 
-            return 'activeState';    
-          //this.$editor().queryFormatBlockState('<mark>'); 
-        
+		activeState: function(){
+            var range = $window.document.getSelection().getRangeAt(0),
+                topNode = this.$editor().displayElements.text[0],
+                checkParents = function (node) {
+                    if(!node.isSameNode(topNode)){
+                        if(node.nodeName.toLowerCase() === 'mark'){
+                            return true;
+                        } else {
+                            return checkParents(node.parentNode);
+                        }
+                    } else {
+                        return false;
+                    }
+                },
+                isHighlighted = checkParents(range.commonAncestorContainer);
+
+            range.detach(); 
+            return isHighlighted;
         }
     });
 	taRegisterTool('p', {
