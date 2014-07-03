@@ -761,147 +761,6 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 			taSelection.setSelectionToElementEnd($target.find('li')[0]);
 		};
 
-        var wrapTextNode = function (container, start, end, tagName, direction) {
-
-            var subRange, wrapperNode;
-            
-            if(start < end) {
-                wrapperNode = $document[0].createElement(tagName);
-                subRange = $document[0].createRange();
-                
-                subRange.setStart(container, start);
-                subRange.setEnd(container, end);
-            
-                subRange.surroundContents(wrapperNode);
-                subRange.detach();
-            } 
-            
-            return container.nextSibling;
-        };
-
-        var wrapNode = function (node, tagName) {
-            var wrapperNode,subRange;  
-            
-            if(node.nodeType === 3 && node.textContent.length === 0) {
-                console.log('empty srting');
-            } else if( node.nodeName.toLowerCase() !== tagName.toLowerCase() ){
-                    
-                    wrapperNode = $document[0].createElement(tagName);
-                    subRange = $document[0].createRange();
-                    
-                    if(node.nodeType === 3){
-                        subRange.setStart(node, 0);
-                        subRange.setEnd(node, node.textContent.length);
-                    } else {
-                        node.insertAdjacentHTML('beforeEnd','.');
-                        subRange.setEnd(node.lastChild, 0);
-                        node.removeChild(node.lastChild);
-                        
-                        node.insertAdjacentHTML('afterBegin','.');
-                        subRange.setStart(node.firstChild, 0);
-                        node.removeChild(node.firstChild);
-                    }
-                    subRange.surroundContents(wrapperNode);
-                }
-            return node;
-        };
-
-        var wrapUp = function (range, actCont, tagName, direction) {
-            var tree = {
-                    topNode: range.commonAncestorContainer,
-                    leftBranch: {
-                        startNode : null, 
-                        topNode : null
-                    },
-                    rightBranch: {
-                        startNode : null, 
-                        topNode : null
-                    }
-                },
-                getSibling = function (node, direction) {
-                    var sibling = node[(direction) ? 'nextSibling' : 'previousSibling'];
-                    return ( sibling && sibling.isSameNode( tree[(direction) ? 'rightBranch' : 'leftBranch'].topNode ) ) ? null : sibling ;
-                },
-                setUp = function (node, direction) {
-                    if(node.nodeName.toLowerCase() === tagName) {
-                        tree[(direction) ? 'leftBranch' : 'rightBranch'].startNode = node;
-                    }
-                    if(node.parentNode.isSameNode(tree.topNode)) {
-                        tree[(direction) ? 'leftBranch' : 'rightBranch'].topNode = node;
-                    } else {
-                        setUp(node.parentNode, direction);
-                    }
-                },
-                wrapSiblings = function (node, direction) {
-                    if(node) {
-                        wrapNode(node, tagName);
-                        wrapSiblings(getSibling(node, direction), direction, tagName);
-                    }
-                },
-                up = function (node, direction) {
-                    console.log('top (' + (direction)?'->':'<-' + ')', node);
-                    if(!node.isSameNode(tree.topNode)){
-                        wrapSiblings(getSibling(node, direction), direction, tagName);
-                        up(node.parentNode, direction, tagName); 
-                    }
-                },
-                cleanTree = function (node, clear)  {
-
-                    if(node.nodeName.toLowerCase() === tagName){
-                        if(clear){
-                            node.outerHTML = node.innerHTML;
-                        } else {
-                            clear = true;
-                        }
-                    }
-
-                    angular.forEach(node.children, function (child) {
-                        cleanTree(child,clear);
-                    }); 
-
-                },
-                mergeEqualSiblings = function (node) {
-                    node.innerHTML = node.innerHTML.replace(new RegExp('<\\/' + tagName + '>\\s*<' + tagName + '>','igm'),'');
-                };
-
-            setUp(range.startContainer, true);
-            setUp(range.endContainer, false);
-            
-            tree.leftBranch.startNode = (tree.leftBranch.startNode) ? tree.leftBranch.startNode : wrapTextNode(range.startContainer, range.startOffset, range.startContainer.textContent.length, tagName, true);
-            tree.rightBranch.startNode = (tree.rightBranch.startNode) ? tree.rightBranch.startNode : wrapTextNode(range.endContainer, 0, range.endOffset, tagName, false);
-            
-            console.log('TREE tree : ', tree);
-
-            // set start point on the higher ancestor tagged with the same mark 
-            up(tree.leftBranch.startNode, true);
-            up(tree.rightBranch.startNode, false);
-            
-            mergeEqualSiblings(tree.topNode);
-            cleanTree(tree.topNode);
-        
-        };
-
-		// Wraps the selection with a epecified string taggified: tag = mytag > <myTag>selection</myTag>
-		var wrapSelectionWithTag = function (customTag) {
-
-			var sel = taSelection.getSelection(),
-				range = sel.getRangeAt(0),
-				tag = customTag.toLowerCase().replace(/[<>]/ig, ''),
-                commonNode = range.commonAncestorContainer,
-                startNode = range.startContainer,
-                endNode = range.endContainer;
-
-			if(!range.collapsed){
-                if( commonNode.isSameNode(startNode) && commonNode.isSameNode(endNode)) { 
-                    range.surroundContents($document[0].createElement(tag));
-                } else {
-                    wrapUp(range, null, tag, true);                        
-                }
-                range.detach();
-                sel.collapse();
-			} 
-
-		};
 
 		return function(taDefaultWrap){
 			taDefaultWrap = taBrowserTag(taDefaultWrap);
@@ -1029,14 +888,13 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 						}
 						taSelection.setSelectionToElementEnd($target[0]);
 						return;
-					}else if(command.toLowerCase() === 'customtag' && options.toLowerCase().replace(/[<>]/ig, '').length > 0){
-                         wrapSelectionWithTag(options);
-
-                    }
+					}
 				}
 				try{
 					$document[0].execCommand(command, showUI, options);
-				}catch(e){}
+                }catch(e){
+                    //console.error(e);
+                }
 			};
 		};
 	}]).directive('taBind', ['taSanitize', '$timeout', '$window', '$document', 'taFixChrome', 'taBrowserTag', 'taSelection', 'taSelectableElements', 'taApplyCustomRenderers',
@@ -1656,7 +1514,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 			var result;
 			try{
 				result = this.action(deferred, _editor.startAction());
-			}catch(any){}
+            }catch(any){
+                //console.error(any);
+            }
 			if(result || result === undefined){
 				// if true or undefined is returned then the action has finished. Otherwise the deferred action will be resolved manually.
 				deferred.resolve();
@@ -1935,6 +1795,43 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 				return node.nextSibling;
 			}
 		};
+        
+        var cleanSelection = function () {
+            if ($window.getSelection) {
+                var sel = $window.getSelection();
+                cleanRanges();
+                sel.collapseToEnd();
+            }
+            return null;
+        };
+
+        var getRange = function () {
+            if ($window.getSelection) {
+                var sel = $window.getSelection();
+                if (!sel.isCollapsed) {
+                    return sel.getRangeAt(0);
+                }
+            }
+            return null;
+        };
+
+        var cleanRanges = function () {
+
+            var sel = window.getSelection(), range;
+            if(sel.rangeCount > 1) {
+                for(var i = 1; i < sel.rangeCount; i++) {
+                    range = sel.getRangeAt(i);
+                    range.detach();
+                    sel.removeRange(range);
+                }
+            }
+        };
+
+        var getOnlySelectedElements = function(){
+            var range = getRange();
+            return (range) ? getRangeSelectedNodes(range) : [];
+        };
+
 		var getRangeSelectedNodes = function(range) {
 			var node = range.startContainer;
 			var endNode = range.endContainer;
@@ -1957,16 +1854,236 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 			}
 			return rangeNodes;
 		};
+
+
+        var wrapTextNode = function (container, start, end, tagName, direction) {
+
+            var subRange, wrapperNode;
+            
+            if(start < end) {
+                wrapperNode = $document[0].createElement(tagName);
+                subRange = $document[0].createRange();
+                
+                subRange.setStart(container, start);
+                subRange.setEnd(container, end);
+            
+                subRange.surroundContents(wrapperNode);
+            } 
+            
+            return container.nextSibling;
+        };
+
+        var wrapNode = function (node, tagName) {
+            var wrapperNode,subRange;  
+            
+            if(node.nodeType === 3 && node.textContent.length === 0) {
+                //console.log('empty srting');
+            } else if( node.nodeName.toLowerCase() !== tagName.toLowerCase() ){
+                    
+                    wrapperNode = $document[0].createElement(tagName);
+                    subRange = $document[0].createRange();
+                    
+                    if(node.nodeType === 3){
+                        subRange.setStart(node, 0);
+                        subRange.setEnd(node, node.textContent.length);
+                    } else {
+                        node.insertAdjacentHTML('beforeEnd','.');
+                        subRange.setEnd(node.lastChild, 0);
+                        node.removeChild(node.lastChild);
+                        
+                        node.insertAdjacentHTML('afterBegin','.');
+                        subRange.setStart(node.firstChild, 0);
+                        node.removeChild(node.firstChild);
+                    }
+                    subRange.surroundContents(wrapperNode);
+                }
+            return node;
+           
+        };
+        
+        var cleanTree = function (node, tagName, clear)  {
+            if(node){
+                if(node.nodeName.toLowerCase() === tagName){
+                    if(clear){
+                        node.outerHTML = node.innerHTML;
+                    } else {
+                        clear = true;
+                    }
+                }
+                angular.forEach(node.children, function (child) {
+                    cleanTree(child, tagName, clear);
+                }); 
+            }
+        };
+
+        var wrapUp = function (range, actCont, tagName, direction) {
+            var tree = {
+                    topNode: range.commonAncestorContainer,
+                    leftBranch: {
+                        startNode : null, 
+                        topNode : null
+                    },
+                    rightBranch: {
+                        startNode : null, 
+                        topNode : null
+                    }
+                },
+                getSibling = function (node, direction) {
+                    var sibling = node[(direction) ? 'nextSibling' : 'previousSibling'];
+                    return ( sibling && sibling.isSameNode( tree[(direction) ? 'rightBranch' : 'leftBranch'].topNode ) ) ? null : sibling ;
+                },
+                setUp = function (node, direction) {
+                    if(node.nodeName.toLowerCase() === tagName) {
+                        tree[(direction) ? 'leftBranch' : 'rightBranch'].startNode = node;
+                    }
+                    if(node.parentNode.isSameNode(tree.topNode)) {
+                        tree[(direction) ? 'leftBranch' : 'rightBranch'].topNode = node;
+                    } else {
+                        setUp(node.parentNode, direction);
+                    }
+                },
+                wrapSiblings = function (node, direction) {
+                    if(node) {
+                        wrapNode(node, tagName);
+                        wrapSiblings(getSibling(node, direction), direction, tagName);
+                    }
+                },
+                up = function (node, direction) {
+                    //console.log('top (' + (direction)?'->':'<-' + ')', node);
+                    if(!node.isSameNode(tree.topNode)){
+                        wrapSiblings(getSibling(node, direction), direction, tagName);
+                        up(node.parentNode, direction, tagName); 
+                    }
+                },
+                mergeEqualSiblings = function (node) {
+                    node.innerHTML = node.innerHTML.replace(new RegExp('<\\/' + tagName + '>\\s*<' + tagName + '>','igm'),'');
+                };
+
+            setUp(range.startContainer, true);
+            setUp(range.endContainer, false);
+            
+            tree.leftBranch.startNode = (tree.leftBranch.startNode) ? tree.leftBranch.startNode : wrapTextNode(range.startContainer, range.startOffset, range.startContainer.textContent.length, tagName, true);
+            tree.rightBranch.startNode = (tree.rightBranch.startNode) ? tree.rightBranch.startNode : wrapTextNode(range.endContainer, 0, range.endOffset, tagName, false);
+            
+            //console.log('TREE tree : ', tree);
+
+            // set start point on the higher ancestor tagged with the same mark 
+            up(tree.leftBranch.startNode, true);
+            up(tree.rightBranch.startNode, false);
+            
+            mergeEqualSiblings(tree.topNode);
+            cleanTree(tree.topNode, tagName);
+        
+        };
+
+        var unwrapSelection = function (range, tagName) {
+            var intermediateNodes = getOnlySelectedElements(),
+                startNode = range.startContainer, 
+                endNode = range.endContainer,
+                topNode = range.commonAncestorContainer,
+                cleanTags = function (node, tagName) {
+                    var nodeHTML,
+                        parentNode;
+                    if (node){
+                        if(node.nodeType === 3) {
+                            node = node.parentElement;
+                        }
+                        nodeHTML = node.innerHTML.replace(/<mark>/g,'').replace(/<\/mark>/g,'');
+                        if(node.nodeName.toLowerCase() === tagName){
+                            parentNode = node.parentNode;
+                            node.outerHTML = nodeHTML;
+                            node = parentNode;
+                        }else{
+                            node.innerHTML = nodeHTML;
+                        }
+                    }
+                    return node;
+                };
+
+            if(range.startOffset > 0) {
+                startNode = wrapTextNode(startNode, 0, range.startOffset, 'tareplace' + tagName + 'tareplace', true); // wrap inverse of 1st and last 
+            }
+
+            if(range.endOffset < range.endContainer.textContent.length) {
+                endNode = wrapTextNode(range.endContainer, range.endOffset, range.endContainer.textContent.length, 'tareplace' + tagName + 'tareplace', false); // wrap inverse of 1st and last 
+            }
+            
+            topNode = cleanTags(topNode,tagName);
+            topNode.innerHTML = topNode.innerHTML.replace(new RegExp('tareplace' + tagName + 'tareplace','g'), tagName);
+
+        };
+		// Wraps the selection with a epecified string taggified: tag = mytag > <myTag>selection</myTag>
+		var wrapSelectionWithTag = function (customTag, reverse) {
+
+            var range = getRange(),
+                tagName = customTag.toLowerCase().replace(/[<>]/ig, ''),
+                commonNode, startNode, endNode;
+
+            if(range){
+                commonNode = range.commonAncestorContainer;
+                startNode = range.startContainer;
+                endNode = range.endContainer;
+
+                if(reverse) {
+                    unwrapSelection(range, tagName);
+                } else {
+                    if( commonNode.isSameNode(startNode) && commonNode.isSameNode(endNode)) { 
+                        range.surroundContents($document[0].createElement(tagName));
+                    } else {
+                        wrapUp(range, null, tagName, true);                        
+                    }
+                }
+                cleanSelection();
+            }
+
+        };
+        
+        var isLeafTagged = function (node, top, tagName) {
+            var tagFound = (node.nodeName.toLowerCase() === tagName),
+                atTop = node.isSameNode(top);
+            
+            return (atTop) ? false : (tagFound) ? true : isLeafTagged(node.parentNode, top, tagName);
+        };
+
+        var isBranchUnderTag = function (node, tagName) {
+            if(node.nodeName.toLowerCase() === tagName) {
+                return true;
+            } else if(node.childNodes.length < 1) {
+                return false;
+            } else {
+                for(var i=0; i<node.childNodes.length; i++) {
+                    return isBranchUnderTag(node.childNodes[i], tagName);
+                }
+                 
+            }
+        };
+
+        var isSelectionUnderTag = function (tagName, editorTopNode) {
+            var range = getRange(),
+                nodes,
+                areintermediateNodesUnderTag = function () {
+                    var nodes = (range) ? getOnlySelectedElements() : null, i=1;
+                    if(nodes.length < 3) {
+                        return true;
+                    } else {
+                        while(nodes && nodes.length > 2 && i < nodes.length - 1 && isBranchUnderTag(nodes[i], tagName)){
+                            i++;
+                        }
+                        return ( i === nodes.length - 1 );
+                    }
+                };
+
+            return (range && editorTopNode) ?  isLeafTagged(range.commonAncestorContainer, editorTopNode, tagName) ?  true :
+                        (   isLeafTagged(range.startContainer, range.commonAncestorContainer, tagName) &&
+                            isLeafTagged(range.endContainer, range.commonAncestorContainer, tagName) &&
+                            areintermediateNodesUnderTag()
+                        ) : false;
+
+        };
+
+        // <p>Etiam sollicitudin, ipsum eu pulvinar rutrum, tellus ipsum laoreet sapien, quis venenatis ante odio sit amet eros. Vivamus laoreet. Donec interdum, metus et <i>hendrerit aliq<b>u<mark>et,</mark></b></i><b><mark> dolor diam </mark></b><mark><b>sa</b>gittis ligula, </mark><i><mark>eget</mark><b><mark> eges</mark>tas</b> libero</i> turpis vel mi. Donec vitae sapien ut libero venenatis faucibus. Vestibulum ullamcorper mauris at ligula.</p>
 		return {
-			getOnlySelectedElements: function(){
-				if (window.getSelection) {
-					var sel = $window.getSelection();
-					if (!sel.isCollapsed) {
-						return getRangeSelectedNodes(sel.getRangeAt(0));
-					}
-				}
-				return [];
-			},
+			getOnlySelectedElements: getOnlySelectedElements,
 			// Some basic selection functions
 			getSelectionElement: function () {
 				var range, sel, container;
@@ -2002,11 +2119,13 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 					}   
 				}
 			},
-            // returns the text under the selection
-            getSelection: function () {
-                return $window.getSelection();
-            },
-			setSelectionToElementStart: function (el){
+            
+            // wraps selection with a sepecifiedTag 
+            wrapSelectionWithTag: wrapSelectionWithTag,
+            // returns true if all the selection is highlighted (no unhighlighted element in the selection)
+            isSelectionUnderTag: isSelectionUnderTag,
+			
+            setSelectionToElementStart: function (el){
 				if (_document.createRange && $window.getSelection) {
 					var range = _document.createRange();
 					range.selectNodeContents(el);
