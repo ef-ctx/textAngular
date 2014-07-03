@@ -1,5 +1,5 @@
 var val;
-describe('taToolsExecuteFunction', function(){
+/*describe('taToolsExecuteFunction', function(){
 	var scope, startActionResult, editor, $rootScope;
 	beforeEach(module('textAngular'));
 	beforeEach(inject(function(taToolExecuteAction, _$rootScope_){
@@ -74,165 +74,171 @@ describe('taToolsExecuteFunction', function(){
 		});
 	});
 });
-
-function buttonByName(element, name){
-	var button;
-	angular.forEach(element.find('button'), function(_b){
-		_b = angular.element(_b);
-		if(_b.attr('name') === name) button = _b;
-	});
-	return button;
+*/
+function buttonByName(element, name) {
+    var button;
+    angular.forEach(element.find('button'), function(_b) {
+        _b = angular.element(_b);
+        if (_b.attr('name') === name) button = _b;
+    });
+    return button;
 }
 
-describe('taTools test tool actions', function(){
-	'use strict';
-	var $rootScope, element, button, editorScope, $window;
-	var findAndTriggerButton = function(name){
-		var button = buttonByName(element, name);
-		button.scope().executeAction(editorScope);
-		editorScope.endAction();
-		$rootScope.$digest();
-		return button;
-	};
-	
-	// We use an assumption here and only test whether the button reports as being activated
-	// it ended up being too difficult to reselect and un-apply
-	
-	var testAllButtons = function(){
-		it('h1 button should function correctly', function(){
-			button = findAndTriggerButton('h1');
-			expect(button.hasClass('active'));
-		});
-		
-		it('h2 button should function correctly', function(){
-			button = findAndTriggerButton('h2');
-			expect(button.hasClass('active'));
-		});
-		
-		it('h3 button should function correctly', function(){
-			button = findAndTriggerButton('h3');
-			expect(button.hasClass('active'));
-		});
-		
-		it('h4 button should function correctly', function(){
-			button = findAndTriggerButton('h4');
-			expect(button.hasClass('active'));
-		});
-		
-		it('h5 button should function correctly', function(){
-			button = findAndTriggerButton('h5');
-			expect(button.hasClass('active'));
-		});
-		
-		it('h6 button should function correctly', function(){
-			button = findAndTriggerButton('h6');
-			expect(button.hasClass('active'));
-		});
-		
-		it('p button should function correctly', function(){
-			button = findAndTriggerButton('p');
-			expect(button.hasClass('active'));
-		});
-		
-		it('pre button should function correctly', function(){
-			button = findAndTriggerButton('pre');
-			expect(button.hasClass('active'));
-		});
-		
-		it('quote button should function correctly', function(){
-			button = findAndTriggerButton('quote');
-			expect(button.hasClass('active'));
-		});
-		
-		it('bold button should function correctly', function(){
-			button = findAndTriggerButton('bold');
-			expect(button.hasClass('active'));
-		});
-		
-		it('italics button should function correctly', function(){
-			button = findAndTriggerButton('italics');
-			expect(button.hasClass('active'));
-		});
-		
-		it('underline button should function correctly', function(){
-			button = findAndTriggerButton('underline');
-			expect(button.hasClass('active'));
-		});
-		
-		it('ul button should function correctly', function(){
-			button = findAndTriggerButton('ul');
-			expect(button.hasClass('active'));
-		});
-		
-		it('ol button should function correctly', function(){
-			button = findAndTriggerButton('ol');
-			expect(button.hasClass('active'));
-		});
-		
-		it('justifyLeft button should function correctly', function(){
-			button = findAndTriggerButton('justifyLeft');
-			expect(button.hasClass('active'));
-		});
-		
-		it('justifyCenter button should function correctly', function(){
-			button = findAndTriggerButton('justifyCenter');
-			expect(button.hasClass('active'));
-		});
-		
-		it('justifyRight button should function correctly', function(){
-			button = findAndTriggerButton('justifyRight');
-			expect(button.hasClass('active'));
-		});
-		
-		it('indent button should function correctly', function(){
-			button = findAndTriggerButton('indent');
-			expect(button.hasClass('active'));
-		});
-		
-		it('outdent button should function correctly', function(){
-			button = findAndTriggerButton('outdent');
-			expect(button.hasClass('active'));
-		});
-		
-		it('html button should function correctly', inject(function($timeout){
-			button = findAndTriggerButton('html');
-			$timeout.flush();
-			expect(button.hasClass('active'));
-			expect(!jQuery('.ta-text').is(":visible"));
-			expect(jQuery('.ta-html').is(":visible"));
-			expect(jQuery('.ta-html').is(":focus"));
-			button = findAndTriggerButton('html'); // retrigger to reset to non html view
-			$timeout.flush();
-			expect(!jQuery('.ta-html').is(":visible"));
-			expect(jQuery('.ta-text').is(":visible"));
-			expect(jQuery('.ta-text').is(":focus"));
-		}));
-		
-		describe('check untestables don\'t error - ', function(){
-			it('redo', function(){
-				expect(function(){
-					findAndTriggerButton('redo');
-				}).not.toThrow();
-			});
-			it('undo', function(){
-				expect(function(){
-					findAndTriggerButton('undo');
-				}).not.toThrow();
-			});
-			it('insertImage', function(){
-				expect(function(){
-					findAndTriggerButton('insertImage');
-				}).not.toThrow();
-			});
-			it('insertVideo', function(){
-				expect(function(){
-					findAndTriggerButton('insertVideo');
-				}).not.toThrow();
-			});
-		});
-	};
-	
-	describe('with un-wrapped content', function(){
+describe('taTools test tool actions', function() {
+    'use strict';
+    var $rootScope, element, button, editorScope, $window;
+    var findAndTriggerButton = function(name) {
+        var button = buttonByName(element, name);
+        button.scope().executeAction(editorScope);
+        editorScope.endAction();
+        $rootScope.$digest();
+        return button;
+    };
+
+    // We use an assumption here and only test whether the button reports as being activated
+    // it ended up being too difficult to reselect and un-apply
+
+    var testAllButtons = function() {
+        it('h1 button should function correctly', function() {
+            button = findAndTriggerButton('h1');
+            expect(button.hasClass('active'));
+        });
+
+        it('h2 button should function correctly', function() {
+            button = findAndTriggerButton('h2');
+            expect(button.hasClass('active'));
+        });
+
+        it('h3 button should function correctly', function() {
+            button = findAndTriggerButton('h3');
+            expect(button.hasClass('active'));
+        });
+
+        it('h4 button should function correctly', function() {
+            button = findAndTriggerButton('h4');
+            expect(button.hasClass('active'));
+        });
+
+        it('h5 button should function correctly', function() {
+            button = findAndTriggerButton('h5');
+            expect(button.hasClass('active'));
+        });
+
+        it('h6 button should function correctly', function() {
+            button = findAndTriggerButton('h6');
+            expect(button.hasClass('active'));
+        });
+
+        it('p button should function correctly', function() {
+            button = findAndTriggerButton('p');
+            expect(button.hasClass('active'));
+        });
+
+        it('pre button should function correctly', function() {
+            button = findAndTriggerButton('pre');
+            expect(button.hasClass('active'));
+        });
+
+        it('quote button should function correctly', function() {
+            button = findAndTriggerButton('quote');
+            expect(button.hasClass('active'));
+        });
+
+        it('highlight button should function correctly', function() {
+            button = findAndTriggerButton('highlight');
+            expect(button.hasClass('active'));
+        });
+
+        it('bold button should function correctly', function() {
+            button = findAndTriggerButton('bold');
+            expect(button.hasClass('active'));
+        });
+
+        it('italics button should function correctly', function() {
+            button = findAndTriggerButton('italics');
+            expect(button.hasClass('active'));
+        });
+
+        it('underline button should function correctly', function() {
+            button = findAndTriggerButton('underline');
+            expect(button.hasClass('active'));
+        });
+
+        it('ul button should function correctly', function() {
+            button = findAndTriggerButton('ul');
+            expect(button.hasClass('active'));
+        });
+
+        it('ol button should function correctly', function() {
+            button = findAndTriggerButton('ol');
+            expect(button.hasClass('active'));
+        });
+
+        it('justifyLeft button should function correctly', function() {
+            button = findAndTriggerButton('justifyLeft');
+            expect(button.hasClass('active'));
+        });
+
+        it('justifyCenter button should function correctly', function() {
+            button = findAndTriggerButton('justifyCenter');
+            expect(button.hasClass('active'));
+        });
+
+        it('justifyRight button should function correctly', function() {
+            button = findAndTriggerButton('justifyRight');
+            expect(button.hasClass('active'));
+        });
+
+        it('indent button should function correctly', function() {
+            button = findAndTriggerButton('indent');
+            expect(button.hasClass('active'));
+        });
+
+        it('outdent button should function correctly', function() {
+            button = findAndTriggerButton('outdent');
+            expect(button.hasClass('active'));
+        });
+
+        it('html button should function correctly', inject(function($timeout) {
+            button = findAndTriggerButton('html');
+            $timeout.flush();
+            expect(button.hasClass('active'));
+            expect(!jQuery('.ta-text').is(":visible"));
+            expect(jQuery('.ta-html').is(":visible"));
+            expect(jQuery('.ta-html').is(":focus"));
+            button = findAndTriggerButton('html'); // retrigger to reset to non html view
+            $timeout.flush();
+            expect(!jQuery('.ta-html').is(":visible"));
+            expect(jQuery('.ta-text').is(":visible"));
+            expect(jQuery('.ta-text').is(":focus"));
+        }));
+
+        describe('check untestables don\'t error - ', function() {
+            it('redo', function() {
+                expect(function() {
+                    findAndTriggerButton('redo');
+                }).not.toThrow();
+            });
+            it('undo', function() {
+                expect(function() {
+                    findAndTriggerButton('undo');
+                }).not.toThrow();
+            });
+            it('insertImage', function() {
+                expect(function() {
+                    findAndTriggerButton('insertImage');
+                }).not.toThrow();
+
+            });
+            it('insertVideo', function() {
+                expect(function() {
+                    findAndTriggerButton('insertVideo');
+                }).not.toThrow();
+            });
+        });
+    };
+
+    /*describe('with un-wrapped content', function(){
 		beforeEach(module('textAngular'));
 		beforeEach(inject(function (_$compile_, _$rootScope_, $document, textAngularManager, _$window_) {
 			$window = _$window_;
@@ -275,9 +281,9 @@ describe('taTools test tool actions', function(){
 		});
 		
 		testAllButtons();
-	});
-	
-	describe('test clear button', function(){
+	});*/
+
+    /*describe('test clear button', function(){
 		beforeEach(module('textAngular'));
 		beforeEach(inject(function (_$compile_, _$rootScope_, $document, textAngularManager, _$window_) {
 			$window = _$window_;
@@ -522,5 +528,82 @@ describe('taTools test tool actions', function(){
 			$rootScope.$digest();
 			expect(editorScope.displayElements.text.find('p').find('img').length).toBe(0);
 		});
+
+
 	});
+	*/
+    describe('highlight functionality', function() {
+
+        var $compile,
+            $rootScope,
+            taManager,
+            $window,
+            $document,
+            body,
+            setContent = function(content) {
+                var htmlText = '<text-angular name="test">' + content + '</text-angular>';
+
+                element = $compile(htmlText)($rootScope);
+                body.append(element);
+                $rootScope.$digest();
+                editorScope = taManager.retrieveEditor('test').scope;
+            },
+            selectText = function(textSelection) {
+                var txtElementTag = editorScope.displayElements.text[0],
+                    txt = txtElementTag.innerHTML,
+                    selectionNode,
+                    sel = $window.rangy.getSelection(),
+                    range = $window.rangy.createRangyRange();
+
+                if (txt.match(textSelection)) {
+                    txtElementTag.innerHTML = txt.replace(textSelection, '<span id="rangeSelection">' + textSelection + '</span>');
+                    selectionNode = document.getElementById('rangeSelection');
+                    range.selectNode(selectionNode);
+                    sel.setSingleRange(range);
+					////txtElementTag.
+                }
+
+            };
+
+        beforeEach(module('textAngular'));
+
+        beforeEach(inject(function(_$compile_, $document, _$rootScope_, _$window_, textAngularManager) {
+            $compile = _$compile_;
+            body = $document.find('body');
+            $rootScope = _$rootScope_;
+            $window = _$window_;
+            taManager = textAngularManager;
+        }));
+
+        afterEach(function() {
+            element.remove();
+        });
+
+        it('should wrap selected content with MARK tag when the content is plain text', function() {
+            // set plain text on text angular
+            var content = 'Pellentesque posuere. Etiam sollicitudin, ipsum eu pulvinar rutrum, ' +
+                'tellus ipsum laoreet sapien, quis venenatis ante odio sit amet eros. ' +
+                'Duis arcu tortor, suscipit eget, imperdiet nec, imperdiet iaculis, ipsum. ' +
+                'Cras risus ipsum, faucibus ut, ullamcorper id, varius ac, leo. Donec mi odio, ' +
+                'faucibus at, scelerisque quis, convallis in, nisi.</p>';
+
+            setContent(content);
+            // select some text 
+            selectText('Etiam sollicitudin');
+            // trigger highlight
+            // check content and find <mark> tag 
+        });
+        it('should trim start/end spaces from selection', function() {
+
+        });
+
+        it('should extend selection if the selection contains a part of a highlighted text', function() {
+
+        });
+
+        it('should split in two a tag if selected range contains an unopened or unclosed tag', function() {
+
+        });
+    });
+
 });

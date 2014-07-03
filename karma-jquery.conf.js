@@ -20,7 +20,8 @@ module.exports = function (config) {
 			'src/textAngular-sanitize.js',
 			'src/textAngularSetup.js',
 			'src/textAngular.js',
-			'test/**/*.spec.js'
+			'test/taTools.spec.js'
+			//'test/**/*.spec.js'
 		],
 
 		// list of files to exclude
