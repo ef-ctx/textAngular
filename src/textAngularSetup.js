@@ -116,7 +116,7 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 			return taSelection.wrapSelectionWithTag('<mark>', this.isHighlighted); 
 		},
 		activeState: function () {
-            var editor = (this.$editor && this.$editor().displayElements) ? this.$editor().displayElements.text[0] : null;
+            var editor = (this.$editor && this.$editor().displayElements) ? this.$editor().displayElements.text[0] : this.$editor().editorDisplayElements.text;
             this.isHighlighted = taSelection.isSelectionUnderTag('mark', editor);
             return this.isHighlighted;
         }
@@ -258,35 +258,38 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 	taRegisterTool('clear', {
 		iconclass: 'fa fa-ban',
 		action: function(deferred, restoreSelection){
-			this.$editor().wrapSelection("removeFormat", null);
-			var possibleNodes = angular.element(taSelection.getSelectionElement());
-			// remove lists
-			var removeListElements = function(list){
-				list = angular.element(list);
-				var prevElement = list;
-				angular.forEach(list.children(), function(liElem){
-					var newElem = angular.element('<p></p>');
-					newElem.html(angular.element(liElem).html());
-					prevElement.after(newElem);
-					prevElement = newElem;
-				});
-				list.remove();
-			};
-			angular.forEach(possibleNodes.find("ul"), removeListElements);
-			angular.forEach(possibleNodes.find("ol"), removeListElements);
-			// clear out all class attributes. These do not seem to be cleared via removeFormat
-			var $editor = this.$editor();
-			var recursiveRemoveClass = function(node){
-				node = angular.element(node);
-				if(node[0] !== $editor.displayElements.text[0]) node.removeAttr('class');
-				angular.forEach(node.children(), recursiveRemoveClass);
-			};
-			angular.forEach(possibleNodes, recursiveRemoveClass);
-			// check if in list. If not in list then use formatBlock option
-			if(possibleNodes[0].tagName.toLowerCase() !== 'li' &&
-				possibleNodes[0].tagName.toLowerCase() !== 'ol' &&
-				possibleNodes[0].tagName.toLowerCase() !== 'ul') this.$editor().wrapSelection("formatBlock", "<p>");
-			restoreSelection();
+            this.$editor().wrapSelection("removeFormat", null);
+            var possibleNodes = angular.element(taSelection.getSelectionElement());
+            // remove lists
+            var removeListElements = function(list){
+                list = angular.element(list);
+                var prevElement = list;
+                angular.forEach(list.children(), function(liElem){
+                    var newElem = angular.element('<p></p>');
+                    newElem.html(angular.element(liElem).html());
+                    prevElement.after(newElem);
+                    prevElement = newElem;
+                });
+                list.remove();
+            };
+            taSelection.clearAllHighlightsFromNode(this.$editor().displayElements.text[0]);
+            angular.forEach(possibleNodes.find("ul"), removeListElements);
+            angular.forEach(possibleNodes.find("ol"), removeListElements);
+            // clear out all class attributes. These do not seem to be cleared via removeFormat
+            var $editor = this.$editor();
+            var recursiveRemoveClass = function(node){
+                node = angular.element(node);
+                if(node[0] !== $editor.displayElements.text[0]) node.removeAttr('class');
+                angular.forEach(node.children(), recursiveRemoveClass);
+            };
+            angular.forEach(possibleNodes, recursiveRemoveClass);
+            // check if in list. If not in list then use formatBlock option
+            if(possibleNodes[0].tagName.toLowerCase() !== 'li' &&
+                possibleNodes[0].tagName.toLowerCase() !== 'ol' &&
+                possibleNodes[0].tagName.toLowerCase() !== 'ul') this.$editor().wrapSelection("formatBlock", "<p>");
+            
+            restoreSelection();
+
 		}
 	});
 	

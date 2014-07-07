@@ -579,7 +579,7 @@ describe('taTools test tool actions', function() {
             element.remove();
         });
 
-        it('should wrap selected content with MARK tag when the content is plain text', function() {
+        /*it('should wrap selected content with MARK tag when the content is plain text', function() {
             // set plain text on text angular
             var content = 'Pellentesque posuere. Etiam sollicitudin, ipsum eu pulvinar rutrum, ' +
                 'tellus ipsum laoreet sapien, quis venenatis ante odio sit amet eros. ' +
@@ -603,7 +603,7 @@ describe('taTools test tool actions', function() {
 
         it('should split in two a tag if selected range contains an unopened or unclosed tag', function() {
 
-        });
+        });*/
     });
 
 });

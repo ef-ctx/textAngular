@@ -957,274 +957,299 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 		function($compile, $timeout, taOptions, taSanitize, taSelection, taExecCommand, textAngularManager, $window, $document, $animate, $log){
 			return {
 				require: '?ngModel',
-				scope: {},
+                scope: {
+                    taDisabled: '=',
+                    taDisableTyping: '='
+                },
 				restrict: "EA",
+                controller: function ($scope){
+                    return {
+                        getDisplayElements: function () {
+                            return $scope.displayElements;
+                        },
+                        getTaScope: function () {
+                            return $scope;    
+                        }
+                    };
+                },
 				link: function(scope, element, attrs, ngModel){
 					// all these vars should not be accessable outside this directive
 					var _keydown, _keyup, _keypress, _mouseup, _focusin, _focusout,
-						_originalContents, _toolbars,
-						_serial = (attrs.serial) ? attrs.serial : Math.floor(Math.random() * 10000000000000000),
-						_name = (attrs.name) ? attrs.name : 'textAngularEditor' + _serial,
-						_taExecCommand;
+                            _originalContents, _toolbars,
+                            _serial = (attrs.serial) ? attrs.serial : Math.floor(Math.random() * 10000000000000000),
+                            _name = (attrs.name) ? attrs.name : 'textAngularEditor' + _serial,
+                            _taExecCommand;
 
-					var oneEvent = function(_element, event, action){
-						$timeout(function(){
-							// shim the .one till fixed
-							var _func = function(){
-								_element.off(event, _func);
-								action();
-							};
-							_element.on(event, _func);
-						}, 100);
-					};
-					_taExecCommand = taExecCommand(attrs.taDefaultWrap);
-					// get the settings from the defaults and add our specific functions that need to be on the scope
-					angular.extend(scope, angular.copy(taOptions), {
-						// wraps the selection in the provided tag / execCommand function. Should only be called in WYSIWYG mode.
-						wrapSelection: function(command, opt, isSelectableElementTool){
-							// catch errors like FF erroring when you try to force an undo with nothing done
-							_taExecCommand(command, false, opt);
-							if(isSelectableElementTool){
-								// re-apply the selectable tool events
-								scope['reApplyOnSelectorHandlerstaTextElement' + _serial]();
-							}
-							// refocus on the shown display element, this fixes a display bug when using :focus styles to outline the box.
-							// You still have focus on the text/html input it just doesn't show up
-							scope.displayElements.text[0].focus();
-						},
-						showHtml: false
-					});
-					// setup the options from the optional attributes
-					if(attrs.taFocussedClass)			scope.classes.focussed = attrs.taFocussedClass;
-					if(attrs.taTextEditorClass)			scope.classes.textEditor = attrs.taTextEditorClass;
-					if(attrs.taHtmlEditorClass)			scope.classes.htmlEditor = attrs.taHtmlEditorClass;
-					// optional setup functions
-					if(attrs.taTextEditorSetup)			scope.setup.textEditorSetup = scope.$parent.$eval(attrs.taTextEditorSetup);
-					if(attrs.taHtmlEditorSetup)			scope.setup.htmlEditorSetup = scope.$parent.$eval(attrs.taHtmlEditorSetup);
-					// optional fileDropHandler function
-					if(attrs.taFileDrop)				scope.fileDropHandler = scope.$parent.$eval(attrs.taFileDrop);
-					else								scope.fileDropHandler = scope.defaultFileDropHandler;
+                        var oneEvent = function(_element, event, action){
+                            $timeout(function(){
+                                // shim the .one till fixed
+                                var _func = function(){
+                                    _element.off(event, _func);
+                                    action();
+                                };
+                                _element.on(event, _func);
+                            }, 100);
+                        };
+                        _taExecCommand = taExecCommand(attrs.taDefaultWrap);
+                        // get the settings from the defaults and add our specific functions that need to be on the scope
+                        angular.extend(scope, angular.copy(taOptions), {
+                            // wraps the selection in the provided tag / execCommand function. Should only be called in WYSIWYG mode.
+                            wrapSelection: function(command, opt, isSelectableElementTool){
+                                // catch errors like FF erroring when you try to force an undo with nothing done
+                                _taExecCommand(command, false, opt);
+                                if(isSelectableElementTool){
+                                    // re-apply the selectable tool events
+                                    scope['reApplyOnSelectorHandlerstaTextElement' + _serial]();
+                                }
+                                // refocus on the shown display element, this fixes a display bug when using :focus styles to outline the box.
+                                // You still have focus on the text/html input it just doesn't show up
+                                scope.displayElements.text[0].focus();
+                            },
+                            showHtml: false
+                        });
+                        // setup the options from the optional attributes
+                        if(attrs.taFocussedClass)			scope.classes.focussed = attrs.taFocussedClass;
+                        if(attrs.taTextEditorClass)			scope.classes.textEditor = attrs.taTextEditorClass;
+                        if(attrs.taHtmlEditorClass)			scope.classes.htmlEditor = attrs.taHtmlEditorClass;
+                        // optional setup functions
+                        if(attrs.taTextEditorSetup)			scope.setup.textEditorSetup = scope.$parent.$eval(attrs.taTextEditorSetup);
+                        if(attrs.taHtmlEditorSetup)			scope.setup.htmlEditorSetup = scope.$parent.$eval(attrs.taHtmlEditorSetup);
+                        // optional fileDropHandler function
+                        if(attrs.taFileDrop)				scope.fileDropHandler = scope.$parent.$eval(attrs.taFileDrop);
+                        else								scope.fileDropHandler = scope.defaultFileDropHandler;
 
-					_originalContents = element[0].innerHTML;
-					// clear the original content
-					element[0].innerHTML = '';
+                        _originalContents = element[0].innerHTML;
+                        // clear the original content
+                        element[0].innerHTML = '';
 
-					// Setup the HTML elements as variable references for use later
-					scope.displayElements = {
-						// we still need the hidden input even with a textarea as the textarea may have invalid/old input in it,
-						// wheras the input will ALLWAYS have the correct value.
-						forminput: angular.element("<input type='hidden' tabindex='-1' style='display: none;'>"),
-						html: angular.element("<textarea></textarea>"),
-						text: angular.element("<div></div>"),
-						// other toolbased elements
-						scrollWindow: angular.element("<div class='ta-scroll-window'></div>"),
-						popover: angular.element('<div class="popover fade bottom" style="max-width: none; width: 305px;"><div class="arrow"></div></div>'),
-						popoverContainer: angular.element('<div class="popover-content"></div>'),
-						resize: {
-							overlay: angular.element('<div class="ta-resizer-handle-overlay"></div>'),
-							background: angular.element('<div class="ta-resizer-handle-background"></div>'),
-							anchors: [
-								angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-tl"></div>'),
-								angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-tr"></div>'),
-								angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-bl"></div>'),
-								angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-br"></div>')
-							],
-							info: angular.element('<div class="ta-resizer-handle-info"></div>')
-						}
-					};
+                        // Setup the HTML elements as variable references for use later
+                        scope.displayElements = {
+                            // we still need the hidden input even with a textarea as the textarea may have invalid/old input in it,
+                            // wheras the input will ALLWAYS have the correct value.
+                            forminput: angular.element("<input type='hidden' tabindex='-1' style='display: none;'>"),
+                            html: angular.element("<textarea></textarea>"),
+                            text: angular.element("<div></div>"),
+                            // other toolbased elements
+                            scrollWindow: angular.element("<div class='ta-scroll-window'></div>"),
+                            popover: angular.element('<div class="popover fade bottom" style="max-width: none; width: 305px;"><div class="arrow"></div></div>'),
+                            popoverContainer: angular.element('<div class="popover-content"></div>'),
+                            resize: {
+                                overlay: angular.element('<div class="ta-resizer-handle-overlay"></div>'),
+                                background: angular.element('<div class="ta-resizer-handle-background"></div>'),
+                                anchors: [
+                                    angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-tl"></div>'),
+                                    angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-tr"></div>'),
+                                    angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-bl"></div>'),
+                                    angular.element('<div class="ta-resizer-handle-corner ta-resizer-handle-corner-br"></div>')
+                                ],
+                                info: angular.element('<div class="ta-resizer-handle-info"></div>')
+                            }
+                        };
 
-					// Setup the popover
-					scope.displayElements.popover.append(scope.displayElements.popoverContainer);
-					scope.displayElements.scrollWindow.append(scope.displayElements.popover);
+                        // Setup the popover
+                        scope.displayElements.popover.append(scope.displayElements.popoverContainer);
+                        scope.displayElements.scrollWindow.append(scope.displayElements.popover);
 
-					scope.displayElements.popover.on('mousedown', function(e, eventData){
-						/* istanbul ignore else: this is for catching the jqLite testing*/
-						if(eventData) angular.extend(e, eventData);
-						// this prevents focusout from firing on the editor when clicking anything in the popover
-						e.preventDefault();
-						return false;
-					});
+                        scope.displayElements.popover.on('mousedown', function(e, eventData){
+                            /* istanbul ignore else: this is for catching the jqLite testing*/
+                            if(eventData) angular.extend(e, eventData);
+                            // this prevents focusout from firing on the editor when clicking anything in the popover
+                            e.preventDefault();
+                            return false;
+                        });
 
-					// define the popover show and hide functions
-					scope.showPopover = function(_el){
-						scope.reflowPopover(_el);
-						scope.displayElements.popover.css('display', 'block');
-						$animate.addClass(scope.displayElements.popover, 'in');
-						oneEvent(element, 'click keyup', function(){scope.hidePopover();});
-					};
-					scope.reflowPopover = function(_el){
-						if(scope.displayElements.text[0].offsetHeight - 51 > _el[0].offsetTop){
-							scope.displayElements.popover.css('top', _el[0].offsetTop + _el[0].offsetHeight + 'px');
-							scope.displayElements.popover.removeClass('top').addClass('bottom');
-						}else{
-							scope.displayElements.popover.css('top', _el[0].offsetTop - 54 + 'px');
-							scope.displayElements.popover.removeClass('bottom').addClass('top');
-						}
-						scope.displayElements.popover.css('left', Math.max(0,
-							Math.min(
-								scope.displayElements.text[0].offsetWidth - 305,
-								_el[0].offsetLeft + (_el[0].offsetWidth / 2.0) - 152.5
-							)
-						) + 'px');
-					};
-					scope.hidePopover = function(){
-						$animate.removeClass(scope.displayElements.popover, 'in', /* istanbul ignore next: dosen't test with mocked animate */ function(){
-							scope.displayElements.popover.css('display', '');
-							scope.displayElements.popoverContainer.attr('style', '');
-							scope.displayElements.popoverContainer.attr('class', 'popover-content');
-						});
-					};
+                        // define the popover show and hide functions
+                        scope.showPopover = function(_el){
+                            scope.reflowPopover(_el);
+                            scope.displayElements.popover.css('display', 'block');
+                            $animate.addClass(scope.displayElements.popover, 'in');
+                            oneEvent(element, 'click keyup', function(){scope.hidePopover();});
+                        };
+                        scope.reflowPopover = function(_el){
+                            if(scope.displayElements.text[0].offsetHeight - 51 > _el[0].offsetTop){
+                                scope.displayElements.popover.css('top', _el[0].offsetTop + _el[0].offsetHeight + 'px');
+                                scope.displayElements.popover.removeClass('top').addClass('bottom');
+                            }else{
+                                scope.displayElements.popover.css('top', _el[0].offsetTop - 54 + 'px');
+                                scope.displayElements.popover.removeClass('bottom').addClass('top');
+                            }
+                            scope.displayElements.popover.css('left', Math.max(0,
+                                Math.min(
+                                    scope.displayElements.text[0].offsetWidth - 305,
+                                    _el[0].offsetLeft + (_el[0].offsetWidth / 2.0) - 152.5
+                                )
+                            ) + 'px');
+                        };
+                        scope.hidePopover = function(){
+                            $animate.removeClass(scope.displayElements.popover, 'in', /* istanbul ignore next: dosen't test with mocked animate */ function(){
+                                scope.displayElements.popover.css('display', '');
+                                scope.displayElements.popoverContainer.attr('style', '');
+                                scope.displayElements.popoverContainer.attr('class', 'popover-content');
+                            });
+                        };
 
-					// setup the resize overlay
-					scope.displayElements.resize.overlay.append(scope.displayElements.resize.background);
-					angular.forEach(scope.displayElements.resize.anchors, function(anchor){ scope.displayElements.resize.overlay.append(anchor);});
-					scope.displayElements.resize.overlay.append(scope.displayElements.resize.info);
-					scope.displayElements.scrollWindow.append(scope.displayElements.resize.overlay);
+                        // setup the resize overlay
+                        scope.displayElements.resize.overlay.append(scope.displayElements.resize.background);
+                        angular.forEach(scope.displayElements.resize.anchors, function(anchor){ scope.displayElements.resize.overlay.append(anchor);});
+                        scope.displayElements.resize.overlay.append(scope.displayElements.resize.info);
+                        scope.displayElements.scrollWindow.append(scope.displayElements.resize.overlay);
 
-					// define the show and hide events
-					scope.reflowResizeOverlay = function(_el){
-						_el = angular.element(_el)[0];
-						scope.displayElements.resize.overlay.css({
-							'display': 'block',
-							'left': _el.offsetLeft - 5 + 'px',
-							'top': _el.offsetTop - 5 + 'px',
-							'width': _el.offsetWidth + 10 + 'px',
-							'height': _el.offsetHeight + 10 + 'px'
-						});
-						scope.displayElements.resize.info.text(_el.offsetWidth + ' x ' + _el.offsetHeight);
-					};
-					/* istanbul ignore next: pretty sure phantomjs won't test this */
-					scope.showResizeOverlay = function(_el){
-						var resizeMouseDown = function(event){
-							var startPosition = {
-								width: parseInt(_el.attr('width')),
-								height: parseInt(_el.attr('height')),
-								x: event.clientX,
-								y: event.clientY
-							};
-							if(startPosition.width === undefined) startPosition.width = _el[0].offsetWidth;
-							if(startPosition.height === undefined) startPosition.height = _el[0].offsetHeight;
-							scope.hidePopover();
-							var ratio = startPosition.height / startPosition.width;
-							var mousemove = function(event){
-								// calculate new size
-								var pos = {
-									x: Math.max(0, startPosition.width + (event.clientX - startPosition.x)),
-									y: Math.max(0, startPosition.height + (event.clientY - startPosition.y))
-								};
-								var applyImageSafeCSS = function(_el, css){
-									_el = angular.element(_el);
-									if(_el[0].tagName.toLowerCase() === 'img'){
-										if(css.height){
-											_el.attr('height', css.height);
-											delete css.height;
-										}
-										if(css.width){
-											_el.attr('width', css.width);
-											delete css.width;
-										}
-									}
-									_el.css(css);
-								};
-								if(event.shiftKey){
-									// keep ratio
-									var newRatio = pos.y / pos.x;
-									applyImageSafeCSS(_el, {
-										width: ratio > newRatio ? pos.x : pos.y / ratio,
-										height: ratio > newRatio ? pos.x * ratio : pos.y
-									});
-								}else{
-									applyImageSafeCSS(_el, {
-										width: pos.x,
-										height: pos.y
-									});
-								}
-								// reflow the popover tooltip
-								scope.reflowResizeOverlay(_el);
-							};
-							$document.find('body').on('mousemove', mousemove);
-							oneEvent(scope.displayElements.resize.overlay, 'mouseup', function(){
-								$document.find('body').off('mousemove', mousemove);
-								scope.showPopover(_el);
-							});
-							event.stopPropagation();
-							event.preventDefault();
-						};
+                        // define the show and hide events
+                        scope.reflowResizeOverlay = function(_el){
+                            _el = angular.element(_el)[0];
+                            scope.displayElements.resize.overlay.css({
+                                'display': 'block',
+                                'left': _el.offsetLeft - 5 + 'px',
+                                'top': _el.offsetTop - 5 + 'px',
+                                'width': _el.offsetWidth + 10 + 'px',
+                                'height': _el.offsetHeight + 10 + 'px'
+                            });
+                            scope.displayElements.resize.info.text(_el.offsetWidth + ' x ' + _el.offsetHeight);
+                        };
+                        /* istanbul ignore next: pretty sure phantomjs won't test this */
+                        scope.showResizeOverlay = function(_el){
+                            var resizeMouseDown = function(event){
+                                var startPosition = {
+                                    width: parseInt(_el.attr('width')),
+                                    height: parseInt(_el.attr('height')),
+                                    x: event.clientX,
+                                    y: event.clientY
+                                };
+                                if(startPosition.width === undefined) startPosition.width = _el[0].offsetWidth;
+                                if(startPosition.height === undefined) startPosition.height = _el[0].offsetHeight;
+                                scope.hidePopover();
+                                var ratio = startPosition.height / startPosition.width;
+                                var mousemove = function(event){
+                                    // calculate new size
+                                    var pos = {
+                                        x: Math.max(0, startPosition.width + (event.clientX - startPosition.x)),
+                                        y: Math.max(0, startPosition.height + (event.clientY - startPosition.y))
+                                    };
+                                    var applyImageSafeCSS = function(_el, css){
+                                        _el = angular.element(_el);
+                                        if(_el[0].tagName.toLowerCase() === 'img'){
+                                            if(css.height){
+                                                _el.attr('height', css.height);
+                                                delete css.height;
+                                            }
+                                            if(css.width){
+                                                _el.attr('width', css.width);
+                                                delete css.width;
+                                            }
+                                        }
+                                        _el.css(css);
+                                    };
+                                    if(event.shiftKey){
+                                        // keep ratio
+                                        var newRatio = pos.y / pos.x;
+                                        applyImageSafeCSS(_el, {
+                                            width: ratio > newRatio ? pos.x : pos.y / ratio,
+                                            height: ratio > newRatio ? pos.x * ratio : pos.y
+                                        });
+                                    }else{
+                                        applyImageSafeCSS(_el, {
+                                            width: pos.x,
+                                            height: pos.y
+                                        });
+                                    }
+                                    // reflow the popover tooltip
+                                    scope.reflowResizeOverlay(_el);
+                                };
+                                $document.find('body').on('mousemove', mousemove);
+                                oneEvent(scope.displayElements.resize.overlay, 'mouseup', function(){
+                                    $document.find('body').off('mousemove', mousemove);
+                                    scope.showPopover(_el);
+                                });
+                                event.stopPropagation();
+                                event.preventDefault();
+                            };
 
-						scope.displayElements.resize.anchors[3].on('mousedown', resizeMouseDown);
+                            scope.displayElements.resize.anchors[3].on('mousedown', resizeMouseDown);
 
-						scope.reflowResizeOverlay(_el);
-						oneEvent(element, 'click', function(){scope.hideResizeOverlay();});
-					};
-					/* istanbul ignore next: pretty sure phantomjs won't test this */
-					scope.hideResizeOverlay = function(){
-						scope.displayElements.resize.overlay.css('display', '');
-					};
+                            scope.reflowResizeOverlay(_el);
+                            oneEvent(element, 'click', function(){scope.hideResizeOverlay();});
+                        };
+                        /* istanbul ignore next: pretty sure phantomjs won't test this */
+                        scope.hideResizeOverlay = function(){
+                            scope.displayElements.resize.overlay.css('display', '');
+                        };
 
-					// allow for insertion of custom directives on the textarea and div
-					scope.setup.htmlEditorSetup(scope.displayElements.html);
-					scope.setup.textEditorSetup(scope.displayElements.text);
-					scope.displayElements.html.attr({
-						'id': 'taHtmlElement' + _serial,
-						'ng-show': 'showHtml',
-						'ta-bind': 'ta-bind',
-						'ng-model': 'html'
-					});
-					scope.displayElements.text.attr({
-						'id': 'taTextElement' + _serial,
-						'contentEditable': 'true',
-						'ta-bind': 'ta-bind',
-						'ng-model': 'html'
-					});
-					scope.displayElements.scrollWindow.attr({'ng-hide': 'showHtml'});
-					if(attrs.taDefaultWrap) scope.displayElements.text.attr('ta-default-wrap', attrs.taDefaultWrap);
+                        // allow for insertion of custom directives on the textarea and div
+                        scope.setup.htmlEditorSetup(scope.displayElements.html);
+                        scope.setup.textEditorSetup(scope.displayElements.text);
+                        scope.displayElements.html.attr({
+                            'id': 'taHtmlElement' + _serial,
+                            'ng-show': 'showHtml',
+                            'ta-bind': 'ta-bind',
+                            'ng-model': 'html'
+                        });
+                        scope.displayElements.text.attr({
+                            'id': 'taTextElement' + _serial,
+                            'contentEditable': scope.displayElements.text.attr('contentEditable') || 'true',
+                            'ta-bind': 'ta-bind',
+                            'ng-model': 'html'
+                        });
 
-					// add the main elements to the origional element
-					scope.displayElements.scrollWindow.append(scope.displayElements.text);
-					element.append(scope.displayElements.scrollWindow);
-					element.append(scope.displayElements.html);
+                        scope.$watch('taDisableTyping', function (data) {
+                            //console.log('taDisableTyping from TA changed', data);
+                            scope.displayElements.text.attr('contentEditable', !data);
+                        });
 
-					scope.displayElements.forminput.attr('name', _name);
-					element.append(scope.displayElements.forminput);
+                        scope.displayElements.scrollWindow.attr({'ng-hide': 'showHtml'});
+                        if(attrs.taDefaultWrap) scope.displayElements.text.attr('ta-default-wrap', attrs.taDefaultWrap);
 
-					if(attrs.tabindex){
-						element.removeAttr('tabindex');
-						scope.displayElements.text.attr('tabindex', attrs.tabindex);
-						scope.displayElements.html.attr('tabindex', attrs.tabindex);
-					}
+                        // add the main elements to the origional element
+                        scope.displayElements.scrollWindow.append(scope.displayElements.text);
+                        element.append(scope.displayElements.scrollWindow);
+                        element.append(scope.displayElements.html);
 
-					if (attrs.placeholder) {
-						scope.displayElements.text.attr('placeholder', attrs.placeholder);
-						scope.displayElements.html.attr('placeholder', attrs.placeholder);
-					}
+                        scope.displayElements.forminput.attr('name', _name);
+                        element.append(scope.displayElements.forminput);
 
-					if(attrs.taDisabled){
-						scope.displayElements.text.attr('ta-readonly', 'disabled');
-						scope.displayElements.html.attr('ta-readonly', 'disabled');
-						scope.disabled = scope.$parent.$eval(attrs.taDisabled);
-						scope.$parent.$watch(attrs.taDisabled, function(newVal){
-							scope.disabled = newVal;
-							if(scope.disabled){
-								element.addClass(scope.classes.disabled);
-							}else{
-								element.removeClass(scope.classes.disabled);
-							}
-						});
-					}
+                        if(attrs.tabindex){
+                            element.removeAttr('tabindex');
+                            scope.displayElements.text.attr('tabindex', attrs.tabindex);
+                            scope.displayElements.html.attr('tabindex', attrs.tabindex);
+                        }
 
-					// compile the scope with the text and html elements only - if we do this with the main element it causes a compile loop
-					$compile(scope.displayElements.scrollWindow)(scope);
-					$compile(scope.displayElements.html)(scope);
+                        if (attrs.placeholder) {
+                            scope.displayElements.text.attr('placeholder', attrs.placeholder);
+                            scope.displayElements.html.attr('placeholder', attrs.placeholder);
+                        }
+                        
 
-					scope.updateTaBindtaTextElement = scope['updateTaBindtaTextElement' + _serial];
-					scope.updateTaBindtaHtmlElement = scope['updateTaBindtaHtmlElement' + _serial];
+                        var disableTextAngular = function (value) {
+                            //console.log(value);
+                            scope.displayElements.text.attr('ta-readonly', 'disabled');
+                            scope.displayElements.html.attr('ta-readonly', 'disabled');
+                            scope.disabled = scope.$parent.$eval(attrs.taDisabled);
+                            scope.$parent.$watch(attrs.taDisabled, function(newVal){
+                                scope.disabled = newVal;
+                                if(scope.disabled){
+                                    element.addClass(scope.classes.disabled);
+                                }else{
+                                    element.removeClass(scope.classes.disabled);
+                                }
+                            });
+                        };
+                        
+                        if(scope.taDisabled){ disableTextAngular(scope.taDisabled); }
+                        
+                        scope.$watch('taDisabled', disableTextAngular);
 
-					// add the classes manually last
-					element.addClass("ta-root");
-					scope.displayElements.scrollWindow.addClass("ta-text ta-editor " + scope.classes.textEditor);
-					scope.displayElements.html.addClass("ta-html ta-editor " + scope.classes.htmlEditor);
+                        // compile the scope with the text and html elements only - if we do this with the main element it causes a compile loop
+                        $compile(scope.displayElements.scrollWindow)(scope);
+                        $compile(scope.displayElements.html)(scope);
 
-					// used in the toolbar actions
+                        scope.updateTaBindtaTextElement = scope['updateTaBindtaTextElement' + _serial];
+                        scope.updateTaBindtaHtmlElement = scope['updateTaBindtaHtmlElement' + _serial];
+
+                        // add the classes manually last
+                        element.addClass("ta-root");
+                        scope.displayElements.scrollWindow.addClass("ta-text ta-editor " + scope.classes.textEditor);
+                        scope.displayElements.html.addClass("ta-html ta-editor " + scope.classes.htmlEditor);
+
+                        // used in the toolbar actions
 					scope._actionRunning = false;
 					var _savedSelection = false;
 					scope.startAction = function(){
@@ -2021,7 +2046,29 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 				ctrl.$parsers.unshift(validator);
 			}
 		};
-	}).factory('taFixChrome', function(){
+    }).directive('taWriteDisabled', [
+        function () {
+            return {
+                restrict: 'A',
+                require: '^textAngular',
+                link: function ($scope, $element, $attrs, textAngularCtrl){
+                    var textEditorComponent = textAngularCtrl.getDisplayElements().text;
+
+                    //disable textEditor 
+                    textEditorComponent.attr('contentEditable', 'false');
+                    
+                    // enable tools  
+                    //overrides isDisabled function of the default childScope
+                    angular.forEach($element.find('button'), function (button) {
+                        angular.element(button).scope().isDisabled = function () {
+                            return false;
+                        };
+                    });
+                    
+                }
+            };
+        }
+    ]).factory('taFixChrome', function(){
 		// get whaterever rubbish is inserted in chrome
 		// should be passed an html string, returns an html string
 		var taFixChrome = function(html){
@@ -2075,8 +2122,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 				scope: {
 					name: '@' // a name IS required
 				},
+                require: '^textAngular',
 				restrict: "EA",
-				link: function(scope, element, attrs){
+				link: function(scope, element, attrs, textAngularCtrl){
 					if(!scope.name || scope.name === '') throw('textAngular Error: A toolbar requires a name');
 					angular.extend(scope, angular.copy(taOptions));
 					if(attrs.taToolbar)						scope.toolbar = scope.$parent.$eval(attrs.taToolbar);
@@ -2146,7 +2194,8 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 					scope._parent = {
 						disabled: true,
 						showHtml: false,
-						queryFormatBlockState: function(){ return false; }
+						queryFormatBlockState: function(){ return false; },
+                        editorDisplayElements: textAngularCtrl.getDisplayElements()
 					};
 					var defaultChildScope = {
 						$window: $window,
@@ -2156,15 +2205,20 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 						},
 						isDisabled: function(){
 							// to set your own disabled logic set a function or boolean on the tool called 'disabled'
+                            var taScope = textAngularCtrl.getTaScope(),
+                                isTypingDisabled = taScope.taDisableTyping,
+                                isTaDisabled = taScope.taDisabled;
+
 							return ( // this bracket is important as without it it just returns the first bracket and ignores the rest
 								// when the button's disabled function/value evaluates to true
 								this.$eval('disabled') || this.$eval('disabled()') ||
 								// all buttons except the HTML Switch button should be disabled in the showHtml (RAW html) mode
 								(this.name !== 'html' && this.$editor().showHtml) ||
 								// if the toolbar is disabled
-								this.$parent.disabled ||
+								//this.$parent.disabled 
 								// if the current editor is disabled
-								this.$editor().disabled
+								//this.$editor().disabled
+                                isTaDisabled
 							);
 						},
 						displayActiveToolClass: function(active){
@@ -2258,7 +2312,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 			// pass into the action the deferred function and also the function to reload the current selection if rangy available
 			var result;
 			try{
-				result = this.action(deferred, _editor.startAction());
+				result = this.action(deferred, (_editor && _editor.startAction && angular.isFunction(_editor.startAction))?_editor.startAction():null);
             }catch(any){
                 //console.error(any);
             }
@@ -2522,9 +2576,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 				}else throw('textAngular Error: No Editor with name "' + name + '" exists');
 			}
 		};
-	}]).service('taSelection', ['$window', '$document',
+	}]).service('taSelection', ['$window', '$document','textAngular',
 	/* istanbul ignore next: all browser specifics and PhantomJS dosen't seem to support half of it */
-	function($window, $document){
+	function($window, $document, textAngular){
 		// need to dereference the document else the calls don't work correctly
 		_document = $document[0];
 		var nextNode = function(node) {
@@ -2720,6 +2774,11 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
             cleanTree(tree.topNode, tagName);
         
         };
+        
+        var clearAllHighlightsFromNode = function (node) {
+            var innerHTML = node.innerHTML.replace(/<mark>/g,'').replace(/<\/mark>/g,'');
+            node.innerHTML = innerHTML; 
+        };
 
         var unwrapSelection = function (range, tagName) {
             var intermediateNodes = getOnlySelectedElements(),
@@ -2759,7 +2818,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
         };
 		// Wraps the selection with a epecified string taggified: tag = mytag > <myTag>selection</myTag>
 		var wrapSelectionWithTag = function (customTag, reverse) {
-
+            console.log('NEW');
             var range = getRange(),
                 tagName = customTag.toLowerCase().replace(/[<>]/ig, ''),
                 commonNode, startNode, endNode;
@@ -2784,10 +2843,15 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
         };
         
         var isLeafTagged = function (node, top, tagName) {
-            var tagFound = (node.nodeName.toLowerCase() === tagName),
+            var tagFound,atTop;
+
+            if (node && node.nodeName){
+                tagFound = (node.nodeName.toLowerCase() === tagName);
                 atTop = node.isSameNode(top);
-            
-            return (atTop) ? false : (tagFound) ? true : isLeafTagged(node.parentNode, top, tagName);
+                return (atTop) ? false : (tagFound) ? true : isLeafTagged(node.parentNode, top, tagName);
+            } 
+
+            return false;
         };
 
         var isBranchUnderTag = function (node, tagName) {
@@ -2869,7 +2933,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
             wrapSelectionWithTag: wrapSelectionWithTag,
             // returns true if all the selection is highlighted (no unhighlighted element in the selection)
             isSelectionUnderTag: isSelectionUnderTag,
-			
+            clearAllHighlightsFromNode: clearAllHighlightsFromNode,	
             setSelectionToElementStart: function (el){
 				if (_document.createRange && $window.getSelection) {
 					var range = _document.createRange();
@@ -3027,7 +3091,7 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 			return taSelection.wrapSelectionWithTag('<mark>', this.isHighlighted); 
 		},
 		activeState: function () {
-            var editor = (this.$editor && this.$editor().displayElements) ? this.$editor().displayElements.text[0] : null;
+            var editor = (this.$editor && this.$editor().displayElements) ? this.$editor().displayElements.text[0] : this.$editor().editorDisplayElements.text;
             this.isHighlighted = taSelection.isSelectionUnderTag('mark', editor);
             return this.isHighlighted;
         }
@@ -3169,35 +3233,38 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 	taRegisterTool('clear', {
 		iconclass: 'fa fa-ban',
 		action: function(deferred, restoreSelection){
-			this.$editor().wrapSelection("removeFormat", null);
-			var possibleNodes = angular.element(taSelection.getSelectionElement());
-			// remove lists
-			var removeListElements = function(list){
-				list = angular.element(list);
-				var prevElement = list;
-				angular.forEach(list.children(), function(liElem){
-					var newElem = angular.element('<p></p>');
-					newElem.html(angular.element(liElem).html());
-					prevElement.after(newElem);
-					prevElement = newElem;
-				});
-				list.remove();
-			};
-			angular.forEach(possibleNodes.find("ul"), removeListElements);
-			angular.forEach(possibleNodes.find("ol"), removeListElements);
-			// clear out all class attributes. These do not seem to be cleared via removeFormat
-			var $editor = this.$editor();
-			var recursiveRemoveClass = function(node){
-				node = angular.element(node);
-				if(node[0] !== $editor.displayElements.text[0]) node.removeAttr('class');
-				angular.forEach(node.children(), recursiveRemoveClass);
-			};
-			angular.forEach(possibleNodes, recursiveRemoveClass);
-			// check if in list. If not in list then use formatBlock option
-			if(possibleNodes[0].tagName.toLowerCase() !== 'li' &&
-				possibleNodes[0].tagName.toLowerCase() !== 'ol' &&
-				possibleNodes[0].tagName.toLowerCase() !== 'ul') this.$editor().wrapSelection("formatBlock", "<p>");
-			restoreSelection();
+            this.$editor().wrapSelection("removeFormat", null);
+            var possibleNodes = angular.element(taSelection.getSelectionElement());
+            // remove lists
+            var removeListElements = function(list){
+                list = angular.element(list);
+                var prevElement = list;
+                angular.forEach(list.children(), function(liElem){
+                    var newElem = angular.element('<p></p>');
+                    newElem.html(angular.element(liElem).html());
+                    prevElement.after(newElem);
+                    prevElement = newElem;
+                });
+                list.remove();
+            };
+            taSelection.clearAllHighlightsFromNode(this.$editor().displayElements.text[0]);
+            angular.forEach(possibleNodes.find("ul"), removeListElements);
+            angular.forEach(possibleNodes.find("ol"), removeListElements);
+            // clear out all class attributes. These do not seem to be cleared via removeFormat
+            var $editor = this.$editor();
+            var recursiveRemoveClass = function(node){
+                node = angular.element(node);
+                if(node[0] !== $editor.displayElements.text[0]) node.removeAttr('class');
+                angular.forEach(node.children(), recursiveRemoveClass);
+            };
+            angular.forEach(possibleNodes, recursiveRemoveClass);
+            // check if in list. If not in list then use formatBlock option
+            if(possibleNodes[0].tagName.toLowerCase() !== 'li' &&
+                possibleNodes[0].tagName.toLowerCase() !== 'ol' &&
+                possibleNodes[0].tagName.toLowerCase() !== 'ul') this.$editor().wrapSelection("formatBlock", "<p>");
+            
+            restoreSelection();
+
 		}
 	});
 	
