@@ -258,7 +258,9 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 	taRegisterTool('clear', {
 		iconclass: 'fa fa-ban',
 		action: function(deferred, restoreSelection){
-            this.$editor().wrapSelection("removeFormat", null);
+            if(this.$editor.wrapSelection){
+                this.$editor().wrapSelection("removeFormat", null);
+            } 
             var possibleNodes = angular.element(taSelection.getSelectionElement());
             // remove lists
             var removeListElements = function(list){

@@ -474,14 +474,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                         });
                         scope.displayElements.text.attr({
                             'id': 'taTextElement' + _serial,
-                            'contentEditable': scope.displayElements.text.attr('contentEditable') || 'true',
+                            'contentEditable': !scope.taDisableTyping,
                             'ta-bind': 'ta-bind',
                             'ng-model': 'html'
-                        });
-
-                        scope.$watch('taDisableTyping', function (data) {
-                            //console.log('taDisableTyping from TA changed', data);
-                            scope.displayElements.text.attr('contentEditable', !data);
                         });
 
                         scope.displayElements.scrollWindow.attr({'ng-hide': 'showHtml'});
@@ -506,10 +501,18 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                             scope.displayElements.html.attr('placeholder', attrs.placeholder);
                         }
                         
+                        scope.$watch('taDisableTyping', function (data) {
+                            //console.log('taDisableTyping from TA changed', data);
+                            scope.displayElements.text.attr('contentEditable', !data);
+                        });
+                        scope.displayElements.text.attr('contentEditable', !scope.taDisableTyping );
+                        
 
                         var disableTextAngular = function (value) {
                             //console.log(value);
-                            scope.displayElements.text.attr('ta-readonly', 'disabled');
+                            if(!scope.taDisableTyping){
+                                scope.displayElements.text.attr('ta-readonly', 'disabled');
+                            }
                             scope.displayElements.html.attr('ta-readonly', 'disabled');
                             scope.disabled = scope.$parent.$eval(attrs.taDisabled);
                             scope.$parent.$watch(attrs.taDisabled, function(newVal){
@@ -1484,7 +1487,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 						disabled: true,
 						showHtml: false,
 						queryFormatBlockState: function(){ return false; },
-                        editorDisplayElements: textAngularCtrl.getDisplayElements()
+                        displayElements: textAngularCtrl.getDisplayElements()
 					};
 					var defaultChildScope = {
 						$window: $window,
