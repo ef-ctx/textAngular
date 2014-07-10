@@ -113,7 +113,9 @@ textAngularSetup.run(['taRegisterTool', '$window', 'taTranslations', 'taSelectio
 		isHighlighted: false,
 		iconclass: 'fa fa-pencil',
 		action: function() {
-			return taSelection.wrapSelectionWithTag('<mark>', this.isHighlighted); 
+            taSelection.wrapSelectionWithTag('<mark>', this.isHighlighted); 
+            this.$editor().taScope.html = this.$editor().displayElements.text[0].innerHTML;
+            return this.$editor.taModel;
 		},
 		activeState: function () {
             var editor = (this.$editor && this.$editor().displayElements) ? this.$editor().displayElements.text[0] : this.$editor().editorDisplayElements.text;
