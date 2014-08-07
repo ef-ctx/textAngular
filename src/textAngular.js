@@ -236,6 +236,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
     textAngular.value('taTools', taTools);
 
     textAngular.config([
+
         function() {
             // clear taTools variable. Just catches testing and any other time that this config may run multiple times...
             angular.forEach(taTools, function(value, key) {
@@ -251,7 +252,8 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                 require: '?ngModel',
                 scope: {
                     taDisabled: '=',
-                    taDisableTyping: '='
+                    taDisableTyping: '=',
+                    ngModel: '='
                 },
                 restrict: "EA",
                 controller: function($scope) {
@@ -282,6 +284,31 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                             _element.on(event, _func);
                         }, 100);
                     };
+
+                    ngModel.$formatters.unshift(function(value) {
+                        if (ngModel.$invalid && angular.isUndefined(value)) {
+                            return ngModel.$modelValue;
+                        } else {
+                            return value;
+                        }
+                    });
+
+                    ngModel.$parsers.push(function(value) {
+                        if (ngModel.$invalid && angular.isUndefined(value)) {
+                            return ngModel.$viewValue;
+                        } else {
+                            return value;
+                        }
+                    });
+
+                    scope.$watch('ngModel', function(data) {
+                        console.log('change ngModel', scope.ngModel);
+                        console.log('change html', scope.html);
+                        console.log('change displayElements.text[0].textContent', scope.displayElements.text[0].textContent);
+                        console.log('change displayElements.forminput[0].value', scope.displayElements.forminput[0].value);
+                        console.log('change displayElements.html[0].value', scope.displayElements.html[0].value);
+                    });
+
                     _taExecCommand = taExecCommand(attrs.taDefaultWrap);
                     // get the settings from the defaults and add our specific functions that need to be on the scope
                     angular.extend(scope, angular.copy(taOptions), {
@@ -766,6 +793,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
             };
         }
     ]).factory('taBrowserTag', [
+
         function() {
             return function(tag) {
                 /* istanbul ignore next: ie specific test */
@@ -1967,7 +1995,6 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                 if (sel.rangeCount > 1) {
                     for (var i = 1; i < sel.rangeCount; i++) {
                         range = sel.getRangeAt(i);
-                        range.detach();
                         sel.removeRange(range);
                     }
                 }
@@ -2102,7 +2129,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                         }
                     },
                     mergeEqualSiblings = function(node) {
-                        node.innerHTML = node.innerHTML.replace(new RegExp('<\\/' + tagName + '>\\s*<' + tagName + '>', 'igm'), '');
+                        node.innerHTML = node.innerHTML.replace(new RegExp('<\\/' + tagName + '>\\s*<' + tagName + '[^>]*>', 'igm'), '');
                     };
 
                 setUp(range.startContainer, true);
