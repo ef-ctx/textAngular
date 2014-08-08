@@ -1012,13 +1012,13 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                         }
                     });
 
-                    scope.$watch('ngModel', function(data) {
+                    /*scope.$watch('ngModel', function(data) {
                         console.log('change ngModel', scope.ngModel);
                         console.log('change html', scope.html);
                         console.log('change displayElements.text[0].textContent', scope.displayElements.text[0].textContent);
                         console.log('change displayElements.forminput[0].value', scope.displayElements.forminput[0].value);
                         console.log('change displayElements.html[0].value', scope.displayElements.html[0].value);
-                    });
+                    });*/
 
                     _taExecCommand = taExecCommand(attrs.taDefaultWrap);
                     // get the settings from the defaults and add our specific functions that need to be on the scope
