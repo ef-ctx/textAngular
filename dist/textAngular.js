@@ -978,6 +978,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                     };
                 },
                 link: function(scope, element, attrs, ngModel) {
+                    
                     // all these vars should not be accessable outside this directive
                     var _keydown, _keyup, _keypress, _mouseup, _focusin, _focusout,
                         _originalContents, _toolbars,
@@ -1004,12 +1005,17 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                         }
                     });
 
+                    var setValidity = function (value) {
+                        var modelElement = angular.element(value),
+                            valid = !attrs.required || modelElement.text().trim().length > 0; 
+
+                        ngModel.$setValidity('required', valid);
+
+                        return value;
+                    };
+
                     ngModel.$parsers.push(function(value) {
-                        if (ngModel.$invalid && angular.isUndefined(value)) {
-                            return ngModel.$viewValue;
-                        } else {
-                            return value;
-                        }
+                        return setValidity((ngModel.$invalid && angular.isUndefined(value)) ? ngModel.$viewValue : value);
                     });
 
                     /*scope.$watch('ngModel', function(data) {
