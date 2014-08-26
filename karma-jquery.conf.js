@@ -10,7 +10,7 @@ module.exports = function (config) {
 			'karma-phantomjs-launcher',
 			'karma-coverage'
 		],
-		
+
 		files: [
 			'bower_components/jquery/jquery.min.js',
 			'bower_components/rangy/rangy-core.js',
@@ -20,8 +20,8 @@ module.exports = function (config) {
 			'src/textAngular-sanitize.js',
 			'src/textAngularSetup.js',
 			'src/textAngular.js',
-			'test/taTools.spec.js'
-			//'test/**/*.spec.js'
+			//'test/taTools.spec.js',
+			'test/**/*.spec.js'
 		],
 
 		// list of files to exclude

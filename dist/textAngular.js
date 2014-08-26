@@ -978,7 +978,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                     };
                 },
                 link: function(scope, element, attrs, ngModel) {
-                    
+
                     // all these vars should not be accessable outside this directive
                     var _keydown, _keyup, _keypress, _mouseup, _focusin, _focusout,
                         _originalContents, _toolbars,
@@ -1007,7 +1007,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 
                     var setValidity = function (value) {
                         var modelElement = angular.element(value),
-                            valid = !attrs.required || modelElement.text().trim().length > 0; 
+                            valid = !attrs.required || modelElement.text().trim().length > 0;
 
                         ngModel.$setValidity('required', valid);
 
@@ -2073,7 +2073,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                         return undefined;
                     }
                 }
-                ctrl.$parsers.unshift(validator);
+                scope.$watch(function () {
+                    return ctrl.$viewValue;
+                }, validator);
             }
         };
     }).directive('taMinText', function() {
@@ -2107,7 +2109,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                         return undefined;
                     }
                 }
-                ctrl.$parsers.unshift(validator);
+                scope.$watch(function () {
+                    return ctrl.$viewValue;
+                }, validator);
             }
         };
     }).directive('taWriteDisabled', [
@@ -2119,10 +2123,10 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                 link: function($scope, $element, $attrs, textAngularCtrl) {
                     var textEditorComponent = textAngularCtrl.getDisplayElements().text;
 
-                    //disable textEditor 
+                    //disable textEditor
                     textEditorComponent.attr('contentEditable', 'false');
 
-                    // enable tools  
+                    // enable tools
                     //overrides isDisabled function of the default childScope
                     angular.forEach($element.find('button'), function(button) {
                         angular.element(button).scope().isDisabled = function() {
@@ -2285,7 +2289,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                                 // all buttons except the HTML Switch button should be disabled in the showHtml (RAW html) mode
                                 (this.name !== 'html' && this.$editor().showHtml) ||
                                 // if the toolbar is disabled
-                                //this.$parent.disabled 
+                                //this.$parent.disabled
                                 // if the current editor is disabled
                                 //this.$editor().disabled
                                 isTaDisabled
@@ -2857,7 +2861,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
 
                 //console.log('TREE tree : ', tree);
 
-                // set start point on the higher ancestor tagged with the same mark 
+                // set start point on the higher ancestor tagged with the same mark
                 up(tree.leftBranch.startNode, true);
                 up(tree.rightBranch.startNode, false);
 
@@ -2896,11 +2900,11 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                     };
 
                 if (range.startOffset > 0) {
-                    startNode = wrapTextNode(startNode, 0, range.startOffset, 'tareplace' + tagName + 'tareplace', true); // wrap inverse of 1st and last 
+                    startNode = wrapTextNode(startNode, 0, range.startOffset, 'tareplace' + tagName + 'tareplace', true); // wrap inverse of 1st and last
                 }
 
                 if (range.endOffset < range.endContainer.textContent.length) {
-                    endNode = wrapTextNode(range.endContainer, range.endOffset, range.endContainer.textContent.length, 'tareplace' + tagName + 'tareplace', false); // wrap inverse of 1st and last 
+                    endNode = wrapTextNode(range.endContainer, range.endOffset, range.endContainer.textContent.length, 'tareplace' + tagName + 'tareplace', false); // wrap inverse of 1st and last
                 }
 
                 topNode = cleanTags(topNode, tagName);
@@ -3021,7 +3025,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                     }
                 },
 
-                // wraps selection with a sepecifiedTag 
+                // wraps selection with a sepecifiedTag
                 wrapSelectionWithTag: wrapSelectionWithTag,
                 // returns true if all the selection is highlighted (no unhighlighted element in the selection)
                 isSelectionUnderTag: isSelectionUnderTag,

@@ -11,7 +11,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-karma-coveralls');
 
     // Default task.
-    grunt.registerTask('default', ['concat', 'uglify', 'clean', 'test']);
+    grunt.registerTask('default', ['concat', 'uglify', 'clean']);
     grunt.registerTask('test', ['jshint', 'karma:jquery', 'karma:jqlite', 'coverage']);
     grunt.registerTask('travis-test', ['jshint', 'karma:jquery', 'karma:jqlite', 'coverage', 'coveralls']);
 
