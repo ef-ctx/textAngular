@@ -1390,12 +1390,12 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                     var source = angular.element('<div/>');
                     source.html(viewValue);
                     var length = source.text().length;
-                    if (!min || length >= min) {
-                        ctrl.$setValidity('taMinText', true);
-                        return viewValue;
-                    } else {
+                    if (min && length < min) {
                         ctrl.$setValidity('taMinText', false);
                         return undefined;
+                    } else {
+                        ctrl.$setValidity('taMinText', true);
+                        return viewValue;
                     }
                 }
                 scope.$watch(function () {
