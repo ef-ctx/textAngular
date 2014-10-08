@@ -1390,7 +1390,7 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                     var source = angular.element('<div/>');
                     source.html(viewValue);
                     var length = source.text().length;
-                    if (!length || length >= min) {
+                    if (!min || length >= min) {
                         ctrl.$setValidity('taMinText', true);
                         return viewValue;
                     } else {
