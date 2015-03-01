@@ -257,13 +257,11 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                 },
                 restrict: "EA",
                 controller: function($scope) {
-                    return {
-                        getDisplayElements: function() {
-                            return $scope.displayElements;
-                        },
-                        getTaScope: function() {
-                            return $scope;
-                        }
+                    this.getDisplayElements = function() {
+                        return $scope.displayElements;
+                    };
+                    this.getTaScope = function() {
+                        return $scope;
                     };
                 },
                 link: function(scope, element, attrs, ngModel) {
@@ -1960,9 +1958,9 @@ See README.md or https://github.com/fraywing/textAngular/wiki for requirements a
                 }
             };
         }
-    ]).service('taSelection', ['$window', '$document', 'textAngular',
+    ]).service('taSelection', ['$window', '$document',
         /* istanbul ignore next: all browser specifics and PhantomJS dosen't seem to support half of it */
-        function($window, $document, textAngular) {
+        function($window, $document) {
             // need to dereference the document else the calls don't work correctly
             _document = $document[0];
             var nextNode = function(node) {
